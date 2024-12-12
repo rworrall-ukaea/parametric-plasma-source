@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 project(parametric_plasma_source)
 
+find_package(PythonLibs REQUIRED)
+include_directories(${PYTHON_INCLUDE_DIRS})
+
 set(SRC_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
 
 message(STATUS ${SRC_DIR})
@@ -59,10 +62,12 @@ if(OpenMC_FOUND)
 
   find_library(OPENMC_LIB openmc HINTS ${OPENMC_LIB_DIR} OPTIONAL)
 
+  find_package(HDF5 REQUIRED)
+
   if (OPENMC_LIB)
     set_target_properties(source_sampling PROPERTIES PREFIX "")
     set_target_properties(source_sampling PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    target_include_directories(source_sampling PUBLIC ${OPENMC_INC_DIR})
+    target_include_directories(source_sampling PUBLIC ${OPENMC_INC_DIR} ${HDF5_INCLUDE_DIRS})
     target_link_libraries(source_sampling ${OPENMC_LIB} gfortran)
   endif()
 
@@ -72,8 +77,6 @@ if(OpenMC_FOUND)
   )
 
   add_executable(source_generator ${source_generator_SOURCES})
-
-  find_package(HDF5 REQUIRED)
 
   set_target_properties(source_generator PROPERTIES POSITION_INDEPENDENT_CODE ON)
   target_include_directories(source_generator PUBLIC ${OPENMC_INC_DIR})

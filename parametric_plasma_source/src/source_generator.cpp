@@ -141,7 +141,22 @@ int main(int argc, char* argv[])
   }
 
   std::cout << "Sampling source:" << std::endl;
-  openmc::model::external_sources.push_back(std::make_unique<openmc::CustomSourceWrapper>(path_source_library, source_parameters));
+  
+  // OpenMC 0.15 changed CustomSourceWrapper to CompiledSourceWrapper taking an pugixml node with two 
+  // attributes rather than the previous string for each attribute.
+  // openmc::model::external_sources.push_back(std::make_unique<openmc::CustomSourceWrapper>(path_source_library, source_parameters));
+  
+  pugi::xml_document doc;
+  pugi::xml_node node_root = doc.append_child("root");
+
+  pugi::xml_attribute pugi_attr_library = node_root.append_attribute("library");
+  pugi_attr_library.set_value(path_source_library.c_str());
+
+  pugi::xml_attribute pugi_attr_parameters = node_root.append_attribute("parameters");
+  pugi_attr_parameters.set_value(source_parameters.c_str());
+
+  openmc::model::external_sources.push_back(std::make_unique<openmc::CompiledSourceWrapper>(node_root));
+
   openmc::calculate_work();
   openmc::allocate_banks();
   openmc::initialize_source();
